@@ -1,46 +1,57 @@
- ---
-
+---
 - hosts: all
-  become= true
+  become: true
+  remote_user: root
 
-  vars:
-    primary_user: bean
-    primary_user_key: "~/.ssh/ansible"
-    diable_root_login: true
-    disable_password_login: true
+  pre_tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install sudo package
+      apt:
+        name: sudo
+        state: present
 
   tasks:
-
-    - name: add USER "bean"
-    user:
-      name: "{{ primary_user }}"
-      system: yes
-      state: present
-      shell: /bin/bash
-      home: "/home/{{ primary_user }}"
-
-    - name: allow USER to have sudo
-      lineinfile:
-        dest: /etc/sudoers
+    # Create user 'bean' with sudo privileges
+    - name: Create user 'bean'
+      user:
+        name: bean
+        groups: sudo
         state: present
-        regexp: "'^{{ primary_user }}'"
-        line: "{{ primary_user }} ALL=(ALL) NOPASSWD: ALL"
+        append: yes
 
-    - name: add authorized_key for USER
+    # Add SSH key for user 'bean'
+    - name: Add SSH key for user 'bean'
       authorized_key:
-        user: "{{ primary_user }}"
-        key: "{{ primary_user_key }}"
+        user: bean
+        key: "{{ lookup('file', '~/.ssh/ansible.pub') }}"
+        state: present
 
-    - name: disable password login
-      lininfile:
-        dest: "{{ sshd_config }}"
-        regexp: "^#?PasswordAuthentication"
-        line: "PasswordAuthentication no"
-        when: disable_password_login
-        notify: restart ssh
+    # Disable root SSH login
+    - name: Disable root SSH login
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+      notify:
+        - restart ssh
+
+    # Disable password login
+    - name: Disable password login
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+      notify:
+        - restart ssh
 
   handlers:
     - name: restart ssh
       service:
         name: ssh
         state: restarted
+
