@@ -7,4 +7,6 @@
   - name: update and upgrade
     apt:
       update_cache: yes
-
+      upgrade: dist
+      autoremove: yes
+    when: ansible_distribution in ["Debian", "Ubuntu"]
