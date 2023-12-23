@@ -49,6 +49,14 @@
       notify:
         - restart ssh
 
+    # Add custom bash prompt
+    - name: Add custom bash prompt to .bashrc
+      blockinfile:
+        path: "/home/bean/.bashrc"
+        block: |
+          {{ lookup('file', 'files/bash_prompt.txt') }}
+      become_user: bean
+
   handlers:
     - name: restart ssh
       service:
