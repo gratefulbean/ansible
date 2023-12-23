@@ -1,0 +1,46 @@
+ ---
+
+- hosts: all
+  become= true
+
+  vars:
+    primary_user: bean
+    primary_user_key: "~/.ssh/ansible"
+    diable_root_login: true
+    disable_password_login: true
+
+  tasks:
+
+    - name: add USER "bean"
+    user:
+      name: "{{ primary_user }}"
+      system: yes
+      state: present
+      shell: /bin/bash
+      home: "/home/{{ primary_user }}"
+
+    - name: allow USER to have sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: "'^{{ primary_user }}'"
+        line: "{{ primary_user }} ALL=(ALL) NOPASSWD: ALL"
+
+    - name: add authorized_key for USER
+      authorized_key:
+        user: "{{ primary_user }}"
+        key: "{{ primary_user_key }}"
+
+    - name: disable password login
+      lininfile:
+        dest: "{{ sshd_config }}"
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication no"
+        when: disable_password_login
+        notify: restart ssh
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted
