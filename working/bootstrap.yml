@@ -1,0 +1,50 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: install updates (CentOS)
+    tags: always
+    dnf:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: install updates (Debian/Ubuntu)
+    tags: always
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: install packages
+    package:
+      name:
+        - sudo
+
+  - name: create bean user
+    tags: always
+    user:
+      name: bean
+      groups: root
+
+  - name: add ssh key for bean
+    tags: always
+    authorized_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKIefOlgTs7w/n/wGGv4LWhOfVwzwmbsQx6VB6/cy/Jo acer_bean"
+      user: bean
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDDFKXMIafzQFacLs0RyQoeTvjFrtR4R2FIlOsvQXOfg ansible"
+
+  - name: add sudoers file for bean
+    tags: always
+    copy:
+      src: sudoer_bean
+      dest: /etc/sudoers.d/bean
+      owner: root
+      group: root
+      mode: 0440
