@@ -1,1 +1,19 @@
-
+local.yam
+ansible.cfg
+hosts  
+*-roles  
+    *-base
+        *-files
+            -users
+                -bean
+                -root
+                -ansible
+        -handlers
+        *-tasks
+            *-main.yml
+            -software
+            
+        -vars
+    -server
+-playbooks
+-?variables
