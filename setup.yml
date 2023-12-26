@@ -1,0 +1,48 @@
+---
+- name: System Update and User Setup
+  hosts: all
+  become: true
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Perform system upgrade
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Install sudo
+      apt:
+        name: sudo
+        state: present
+
+    - name: Ensure sudoers.d directory exists
+      file:
+        path: /etc/sudoers.d
+        state: directory
+
+    - name: Create user bean
+      user:
+        name: "bean"
+        password: Mahina06
+        groups: sudo
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Add sudoers file for user bean
+      template:
+        src: ~/ansible/sudoers.j2
+        dest: /etc/sudoers.d/bean
+        mode: 0440
+      vars:
+        username: bean
+
+    - name: Add SSH key for user bean
+      authorized_key:
+        user: "bean"
+        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKIefOlgTs7w/n/wGGv4LWhOfVwzwmbsQx6VB6/cy/Jo acer_bean"
+        state: present

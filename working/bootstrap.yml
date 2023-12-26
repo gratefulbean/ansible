@@ -1,6 +1,6 @@
 ---
 
-- hosts: all
+- hosts: localhost
   become: true
   pre_tasks:
 
@@ -16,10 +16,10 @@
     apt:
       upgrade: dist
       update_cache: yes
-    when: ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "Debian, Ubuntu"
 
 
-- hosts: all
+- hosts: localhost
   become: true
   tasks:
 
@@ -36,9 +36,9 @@
 
   - name: add ssh key for bean
     tags: always
-    authorized_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKIefOlgTs7w/n/wGGv4LWhOfVwzwmbsQx6VB6/cy/Jo acer_bean"
+    authorized_key:
       user: bean
-      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDDFKXMIafzQFacLs0RyQoeTvjFrtR4R2FIlOsvQXOfg ansible"
+      key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKIefOlgTs7w/n/wGGv4LWhOfVwzwmbsQx6VB6/cy/Jo acer_bean
 
   - name: add sudoers file for bean
     tags: always
@@ -47,4 +47,3 @@
       dest: /etc/sudoers.d/bean
       owner: root
       group: root
-      mode: 0440
