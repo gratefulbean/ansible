@@ -2,6 +2,10 @@
 - name: System Update and User Setup
   hosts: all
   become: true
+
+  vars:
+    username: bean
+
   tasks:
     - name: Update apt package cache
       apt:
@@ -27,22 +31,53 @@
 
     - name: Create user bean
       user:
-        name: "bean"
-        password: Mahina06
+        name: "{{ username }}"
+        password: $y$j9T$ez.LuqKP8wiFyyUxPw44A/$flCPclyw.cjCdd/LYeEHEa9OKjvR/flt.Ew.9IPWQbD
         groups: sudo
         shell: /bin/bash
         create_home: yes
 
     - name: Add sudoers file for user bean
       template:
-        src: ~/ansible/sudoers.j2
-        dest: /etc/sudoers.d/bean
+        src: files/sudoers
+        dest: /etc/sudoers.d/"{{ username }}"
         mode: 0440
-      vars:
-        username: bean
 
     - name: Add SSH key for user bean
       authorized_key:
-        user: "bean"
+        user: "{{ username }}"
         key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKIefOlgTs7w/n/wGGv4LWhOfVwzwmbsQx6VB6/cy/Jo acer_bean"
         state: present
+
+    - name: Copy .bashrc file to user bean's home directory
+      copy:
+        src: files/bashrc 
+        dest: "/home/{{ username }}/.bashrc"
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: 0644
+
+-  hosts: all
+   become: yes
+
+   tasks:
+     - name: Create user ansible
+       user:
+         name: "ansible"
+         system: yes
+
+     - name: set up sudo for ansible user
+       copy:
+         src: files/sudoers
+         dest: /etc/sudoers.d/ansible 
+         owner: root
+         group: root
+         mode: 0440
+
+    #- name: add ansible-pull cron job
+     # cron:
+       # name: ansible auto-provision
+       # user: velociraptor
+       # minute: "*/10"
+       # job: ansible-pull -o -U https://github.com/jlacroix82/ansible_pull_tutorial.git
+
